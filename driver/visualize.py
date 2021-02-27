@@ -2,6 +2,7 @@ import math
 import pickle
 import sys
 import time
+from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.cm  # type: ignore
 import numpy as np
@@ -13,6 +14,7 @@ from pyglet.window import key  # type: ignore
 
 import driver.utils_driving as utils
 from driver.car import Car
+from driver.lane import Lane
 
 
 class Visualizer:
@@ -27,9 +29,9 @@ class Visualizer:
         self.autoquit = False
         self.frame = None
         self.subframes = None
-        self.visible_cars = []
+        self.visible_cars: List[Car] = []
         self.magnify = magnify
-        self.camera_center = None
+        self.camera_center: Optional[List] = None
         self.name = name
         self.output = None
         self.iters = iters
@@ -37,21 +39,21 @@ class Visualizer:
         self.window = pyglet.window.Window(600, 600, fullscreen=fullscreen, caption=name)
         self.grass = pyglet.resource.texture("imgs/grass.png")
         self.window.on_draw = self.on_draw
-        self.lanes = []
-        self.cars = []
+        self.lanes: List[Lane] = []
+        self.cars: List[Car] = []
         self.dt = dt
-        self.anim_x = {}
-        self.prev_x = {}
-        self.feed_u = None
-        self.feed_x = None
-        self.prev_t = None
+        self.anim_x: Dict[Car, np.ndarray] = {}
+        self.prev_x: Dict[Car, np.ndarray] = {}
+        self.feed_u: Optional[np.ndarray] = None
+        self.feed_x: Optional[np.ndarray] = None
+        self.prev_t: Optional[float] = None
         self.joystick = None
         self.keys = key.KeyStateHandler()
         self.window.push_handlers(self.keys)
         self.window.on_key_press = self.on_key_press
-        self.main_car = None
-        self.heat = None
-        self.heatmap = None
+        self.main_car: Optional[Car] = None
+        self.heat: Optional[Callable] = None
+        self.heatmap: Any = None
         self.heatmap_valid = False
         self.heatmap_show = False
         self.cm = matplotlib.cm.jet
@@ -125,19 +127,19 @@ class Visualizer:
             gas -= self.joystick.y
         self.heatmap_valid = False
         for car in self.cars:
-            self.prev_x[car] = car.x
+            self.prev_x[car] = car.state
         if self.feed_u is None:
             for car in reversed(self.cars):
-                car.control(steer, gas)
+                car.action = np.array(steer, gas)
         else:
             for car, fu, hu in zip(self.cars, self.feed_u, self.history_u):
-                car.u = fu[len(hu)]
+                car.action = fu[len(hu)]
         for car, hist in zip(self.cars, self.history_u):
-            hist.append(car.u)
+            hist.append(car.action)
         for car in self.cars:
             car.move()
         for car, hist in zip(self.cars, self.history_x):
-            hist.append(car.x)
+            hist.append(car.state)
         self.prev_t = time.time()
 
     def center(self):
@@ -186,6 +188,7 @@ class Visualizer:
             self.heatmap_x0 = x0
             self.heatmap_x1 = x1
             vals = np.zeros(SIZE)
+            assert self.heat is not None
             for i, x in enumerate(np.linspace(x0[0], x1[0], SIZE[0])):
                 for j, y in enumerate(np.linspace(x0[1], x1[1], SIZE[1])):
                     vals[j, i] = self.heat(np.asarray([x, y]))
@@ -214,18 +217,20 @@ class Visualizer:
         gl.glDisable(self.heatmap.target)
 
     def output_loop(self, _):
+        assert self.frame is not None
         if self.frame % self.subframes == 0:
             self.control_loop()
         alpha = float(self.frame % self.subframes) / float(self.subframes)
         for car in self.cars:
-            self.anim_x[car] = (1 - alpha) * self.prev_x[car] + alpha * car.x
+            self.anim_x[car] = (1 - alpha) * self.prev_x[car] + alpha * car.state
         self.frame += 1
 
     def animation_loop(self, _):
+        assert self.prev_t is not None
         t = time.time()
         alpha = min((t - self.prev_t) / self.dt, 1.0)
         for car in self.cars:
-            self.anim_x[car] = (1 - alpha) * self.prev_x[car] + alpha * car.x
+            self.anim_x[car] = (1 - alpha) * self.prev_x[car] + alpha * car.state
 
     def draw_lane_surface(self, lane):
         gl.glColor3f(0.4, 0.4, 0.4)
@@ -315,18 +320,17 @@ class Visualizer:
             car.reset()
         self.prev_t = time.time()
         for car in self.cars:
-            self.prev_x[car] = car.x
-            self.anim_x[car] = car.x
+            self.prev_x[car] = car.state
+            self.anim_x[car] = car.state
         self.paused = True
-        self.history_x = [[] for car in self.cars]
-        self.history_u = [[] for car in self.cars]
+        self.history_x: List[List[np.ndarray]] = [[] for car in self.cars]
+        self.history_u: List[List[np.ndarray]] = [[] for car in self.cars]
 
     def run(self, filename=None, pause_every=None):
         self.pause_every = pause_every
         self.reset()
         if filename is not None:
-
-            with open(filename) as f:
+            with open(filename, "rb") as f:
                 self.feed_u, self.feed_x = pickle.load(f)
         if self.output is None:
             pyglet.clock.schedule_interval(self.animation_loop, 0.02)
@@ -352,10 +356,10 @@ class Visualizer:
 if __name__ == "__main__" and len(sys.argv) == 1:
     import driver.world as wrld
 
-    world = wrld.world2()
+    world2 = wrld.world2()
     vis = Visualizer(0.1, name="replay")
-    vis.use_world(world)
-    vis.main_car = world.cars[0]
+    vis.use_world(world2)
+    vis.main_car = world2.cars[0]
     vis.run()
 elif __name__ == "__main__" and len(sys.argv) > 1:
     filename = sys.argv[1]

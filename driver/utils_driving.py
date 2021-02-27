@@ -1,4 +1,4 @@
-from typing import Any, Callable, Sequence, TypeVar
+from typing import Any, Callable, Sequence, TypeVar, cast
 
 import numpy as np
 import theano as th  # type: ignore
@@ -32,7 +32,7 @@ def grad(f: Callable, x: Any, constants: list = []) -> TensorVariable:
 
 
 def jacobian(f: Sequence[Callable], x: Any, constants: list = []) -> TensorVariable:
-    sz = shape(f)
+    sz = cast(int, shape(f))  # Theano is doing some implicit casting black magic here
     return tt.stacklists([grad(f[i], x) for i in range(sz)])
 
 

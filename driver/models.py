@@ -19,8 +19,7 @@ class Driver(DrivingSimulation):
         self.num_of_features = 4
 
     def get_features(self) -> List[float]:
-        recording = self.get_recording(all_info=False)
-        recording = np.array(recording)
+        recording = np.array(self.get_recording(all_info=False))
 
         # staying in lane (higher is better)
         staying_in_lane = (

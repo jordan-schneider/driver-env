@@ -3,7 +3,7 @@ from typing import Any, Tuple
 
 import gym  # type: ignore
 import numpy as np
-from gym.spaces import Box
+from gym.spaces import Box  # type: ignore
 
 from driver import car, dynamics, lane
 from driver.world import World

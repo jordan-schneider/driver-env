@@ -2,7 +2,7 @@ from typing import Callable, List
 
 import numpy as np
 import theano as th  # type: ignore
-from theano.tensor import TensorVariable
+from theano.tensor import TensorVariable  # type: ignore
 
 import driver.utils_driving as utils
 from driver.dynamics import Dynamics

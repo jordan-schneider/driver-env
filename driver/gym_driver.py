@@ -11,7 +11,7 @@ from driver.world import World
 
 class GymDriver(gym.Env):
     def __init__(self, reward: np.ndarray, horizon: int, random_start: bool = False,) -> None:
-        self.reward = reward
+        self.reward_weights = reward
 
         self.world = World()
         self.lane_width = 0.17
@@ -85,7 +85,7 @@ class GymDriver(gym.Env):
 
         state = self.state()
         reward_features = self.get_features(state)
-        reward = self.reward @ reward_features
+        reward = self.reward_weights @ reward_features
         done = self.timestep >= self.horizon - 1
 
         self.timestep += 1

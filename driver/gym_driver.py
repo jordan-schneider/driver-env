@@ -10,7 +10,12 @@ from driver.world import World
 
 
 class GymDriver(gym.Env):
-    def __init__(self, reward: np.ndarray, horizon: int, random_start: bool = False,) -> None:
+    def __init__(
+        self,
+        reward: np.ndarray,
+        horizon: int,
+        random_start: bool = False,
+    ) -> None:
         self.reward_weights = reward
 
         self.world = World()
@@ -55,7 +60,7 @@ class GymDriver(gym.Env):
     @staticmethod
     def get_features(state: np.ndarray) -> np.ndarray:
         # staying in lane (higher is better)
-        min_dist_to_lane = min(
+        min_dist_to_lane = np.min(
             (state[0, 0] - 0.17) ** 2, (state[0, 0]) ** 2, (state[0, 0] + 0.17) ** 2
         )
         staying_in_lane: float = np.exp(-30 * min_dist_to_lane) / 0.15343634
@@ -75,6 +80,36 @@ class GymDriver(gym.Env):
         )
 
         return np.array([staying_in_lane, keeping_speed, heading, collision_avoidance], dtype=float)
+
+    @staticmethod
+    def get_feature_batch(states: np.ndarray) -> np.ndarray:
+        # staying in lane (higher is better)
+        min_dist_to_lane = np.min(
+            ((states[:, 0, 0] - 0.17) ** 2, (states[:, 0, 0]) ** 2, (states[:, 0, 0] + 0.17) ** 2),
+            axis=0,
+        )
+        staying_in_lane: float = np.exp(-30 * min_dist_to_lane) / 0.15343634
+
+        # keeping speed (lower is better)
+        keeping_speed: float = (states[:, 0, 3] - 1) ** 2 / 0.42202643
+
+        # heading (higher is better)
+        heading: float = np.sin(states[:, 0, 2]) / 0.06112367
+
+        # collision avoidance (lower is better)
+        collision_avoidance: float = (
+            np.exp(
+                -(
+                    7.0 * (states[:, 0, 0] - states[:, 1, 0]) ** 2
+                    + 3.0 * (states[:, 0, 1] - states[:, 1, 1]) ** 2
+                )
+            )
+            / 0.15258019
+        )
+
+        return np.array(
+            [staying_in_lane, keeping_speed, heading, collision_avoidance], dtype=float
+        ).transpose()
 
     def step(self, action) -> Tuple[Any, float, bool, dict]:
         self.robot.action = action

@@ -25,8 +25,10 @@ class GymDriver(gym.Env):
         self.world.fences += [center_lane.shifted(2), center_lane.shifted(-2)]
         self.dyn = dynamics.CarDynamics(0.1)
         # each car's state = [x, y, angle, acceleration]
-        self.robot = car.Car(self.dyn, [0.0, -0.3, np.pi / 2.0, 0.4], color="orange")
-        self.human = car.Car(self.dyn, [self.lane_width, 0.0, np.pi / 2.0, 0.41], color="white")
+        self.robot = car.Car(self.dyn, np.array([0.0, -0.3, np.pi / 2.0, 0.4]), color="orange")
+        self.human = car.Car(
+            self.dyn, np.array([self.lane_width, 0.0, np.pi / 2.0, 0.41]), color="white"
+        )
         self.world.cars.append(self.robot)
         self.world.cars.append(self.human)
         self.initial_state = [self.robot.state, self.human.state]

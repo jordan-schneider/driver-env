@@ -62,7 +62,7 @@ class GymDriver(gym.Env):
     @staticmethod
     def get_features(state: np.ndarray) -> np.ndarray:
         # staying in lane (higher is better)
-        min_dist_to_lane = np.min(
+        min_dist_to_lane = min(
             (state[0, 0] - 0.17) ** 2, (state[0, 0]) ** 2, (state[0, 0] + 0.17) ** 2
         )
         staying_in_lane: float = np.exp(-30 * min_dist_to_lane) / 0.15343634

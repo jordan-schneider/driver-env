@@ -50,8 +50,8 @@ class DrivingSimulation(Simulation):
         self.world.lanes += [clane, clane.shifted(1), clane.shifted(-1)]
         self.world.fences += [clane.shifted(2), clane.shifted(-2)]
         self.dyn = dynamics.CarDynamics(0.1)
-        self.robot = car.Car(self.dyn, [0.0, -0.3, np.pi / 2.0, 0.4], color="orange")
-        self.human = car.Car(self.dyn, [0.17, 0.0, np.pi / 2.0, 0.41], color="white")
+        self.robot = car.Car(self.dyn, np.array([0.0, -0.3, np.pi / 2.0, 0.4]), color="orange")
+        self.human = car.Car(self.dyn, np.array([0.17, 0.0, np.pi / 2.0, 0.41]), color="white")
         self.world.cars.append(self.robot)
         self.world.cars.append(self.human)
         self.initial_state = (self.robot.state, self.human.state)

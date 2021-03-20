@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Sequence
+from typing import Callable, Optional
 
 import numpy as np
 import theano.tensor as tt  # type: ignore

@@ -1,13 +1,12 @@
 import driver.gym
 import gym  # type: ignore
 import numpy as np
+from driver.legacy.gym_driver import GymDriver
 from driver.math_utils import safe_normalize
 from hypothesis import given
 from hypothesis.extra.numpy import arrays
 from hypothesis.strategies import floats
 from numpy.testing import assert_allclose, assert_equal
-
-from .old_gym.gym_driver import GymDriver
 
 
 @given(

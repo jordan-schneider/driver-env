@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from driver.simulator import DrivingSimulation
+from .simulator import DrivingSimulation
 
 
 class Driver(DrivingSimulation):

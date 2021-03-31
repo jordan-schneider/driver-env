@@ -2,8 +2,8 @@ from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 
-from driver import car, dynamics, lane
-from driver.world import World
+from . import car, dynamics, lane
+from .world import World
 
 
 class Simulation(object):
@@ -110,19 +110,4 @@ class DrivingSimulation(Simulation):
         return traj[self.recording_time[0] : self.recording_time[1]]
 
     def watch(self, repeat_count: int = 1) -> None:
-        self.robot.state = self.initial_state[0]
-        self.human.state = self.initial_state[1]
-        if self.viewer is None:
-            from driver import visualize
-
-            self.viewer = visualize.Visualizer(0.1, magnify=1.2)
-            self.viewer.main_car = self.robot
-            self.viewer.use_world(self.world)
-            self.viewer.paused = True
-        for _ in range(repeat_count):
-            self.viewer.run_modified(
-                history_x=[self.robot_history_state, self.human_history_state],
-                history_u=[self.robot_history_action, self.human_history_action],
-            )
-        self.viewer.window.close()
-        self.viewer = None
+        raise NotImplementedError()

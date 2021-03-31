@@ -1,7 +1,7 @@
 import numpy as np
 import theano.tensor as tt  # type: ignore
 
-from driver import feature
+from . import feature
 
 
 class Lane:

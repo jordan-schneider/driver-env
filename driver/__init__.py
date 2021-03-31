@@ -1,4 +1,3 @@
-import gym  # type: ignore
-
-gym.envs.register(id="driver-v1", entry_point="driver.gym_driver:GymDriver")
-from .models import Driver
+"""
+Code for for simulating car behavior and reward inference for self-driving cars.
+"""

@@ -5,8 +5,8 @@ import gym  # type: ignore
 import numpy as np
 from gym.spaces import Box  # type: ignore
 
-from driver import car, dynamics, lane
-from driver.world import World
+from . import car, dynamics, lane
+from .world import World
 
 
 class GymDriver(gym.Env):

@@ -2,6 +2,7 @@ This repo is now effectively a fork of https://github.com/avikj/L4DC-MPC-OCD tha
 
 The relevant portions of the original readme follow.
 
+There are two sets of legacy objects. The first live in the `legacy/` folder and have the structure from many of Sadigh's original papers, left for compatabiliy with active-irl algorithms. The second are classes named `LegacySomething` e.g. `LegacyPlannerCar` which are intended for use with the L4DC-MPC-OCD code and provide gradients, but replicate the dynamics of the original environment more accurately.
 # TODO(joschnei): Detailed usage instructions.
 
 ---

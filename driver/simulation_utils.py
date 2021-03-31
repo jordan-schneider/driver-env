@@ -346,3 +346,12 @@ def get_dynamics_fn(friction: float, legacy: bool):
         return next_car_state(state, control, dt, friction, legacy)
 
     return next_state
+
+
+def to_numpy(state: Union[np.ndarray, tf.Tensor, Iterable]) -> np.ndarray:
+    if isinstance(state, np.ndarray):
+        return state
+    elif isinstance(state, tf.Tensor):
+        return state.numpy()
+    else:
+        return np.array(state)

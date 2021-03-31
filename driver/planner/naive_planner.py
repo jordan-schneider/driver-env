@@ -1,13 +1,16 @@
 """Planner that assumes all other cars travel at constant velocity."""
+from __future__ import annotations
 
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import numpy as np
 import tensorflow as tf  # type: ignore
 from driver.car.car import Car
 from driver.planner.car_planner import CarPlanner
 from driver.simulation_utils import next_car_state
-from driver.world import CarWorld
+
+if TYPE_CHECKING:
+    from driver.world import CarWorld
 
 
 class NaivePlanner(CarPlanner):

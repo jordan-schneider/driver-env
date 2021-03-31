@@ -1,12 +1,16 @@
 """Module containing the base class for planner cars."""
+from __future__ import annotations
 
-from typing import Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 
 import numpy as np
 import tensorflow as tf  # type: ignore
 from driver.car.car import Car
+from driver.car.linear_reward_car import LinearRewardCar
 from driver.planner.naive_planner import NaivePlanner
-from driver.world import CarWorld
+
+if TYPE_CHECKING:
+    from driver.world import CarWorld
 
 
 class PlannerCar(Car):
@@ -93,3 +97,11 @@ class PlannerCar(Car):
     # @tf.function
     # def reward_fn(self, state, control):
     #     raise NotImplementedError
+
+
+class LinearPlannerCar(LinearRewardCar, PlannerCar):
+    pass
+
+
+class LegacyPlannerCar(LinearRewardCar, PlannerCar):
+    pass

@@ -1,10 +1,14 @@
-from typing import Iterable, Sequence, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Iterable, Sequence, Union
 
 import numpy as np
 import tensorflow as tf  # type: ignore
 from driver.car import LinearRewardCar, PlannerCar
 from driver.math_utils import smooth_bump, smooth_threshold
-from driver.world import CarWorld
+
+if TYPE_CHECKING:
+    from driver.world import CarWorld
 
 
 class ThreeLaneTestCar(LinearRewardCar, PlannerCar):

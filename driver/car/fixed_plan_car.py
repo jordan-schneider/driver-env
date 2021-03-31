@@ -1,9 +1,14 @@
-from typing import Iterable, Sequence, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Iterable, List, Sequence, Union
 
 import numpy as np
 import tensorflow as tf  # type: ignore
 from driver.car.car import Car, Control
-from driver.world import CarWorld
+from driver.simulation_utils import to_numpy
+
+if TYPE_CHECKING:
+    from driver.world import CarWorld
 
 
 class FixedPlanCar(Car):
@@ -45,3 +50,37 @@ class FixedPlanCar(Car):
     @tf.function
     def reward_fn(self, world_state, self_control):
         return 0
+
+
+class LegacyPlanCar(FixedPlanCar):
+    def __init__(
+        self,
+        env: CarWorld,
+        init_state: Union[np.ndarray, tf.Tensor, Iterable, None] = None,
+        default_control: Control = None,
+        opacity: float = 1.0,
+        **kwargs
+    ):
+        if init_state is None:
+            init_state = np.array([env.lane_width, 0.0, np.pi / 2.0, 0.41])
+        plan = self.make_legacy_plan(to_numpy(init_state))
+        super().__init__(
+            env,
+            init_state,
+            plan,
+            default_control=default_control,
+            color="orange",
+            opacity=opacity,
+            legacy_state=True,
+            **kwargs
+        )
+
+    @staticmethod
+    def make_legacy_plan(initial_state: np.ndarray, horizon: int = 50) -> List[np.ndarray]:
+        assert horizon % 5 == 0
+        phase_length = horizon // 5
+        plan = [np.array([0, initial_state[3]])] * phase_length
+        plan.extend([np.array([1.0, initial_state[3]])] * phase_length)
+        plan.extend([np.array([-1.0, initial_state[3]])] * phase_length)
+        plan.extend([np.array([-1.0, initial_state[3] * 1.3])] * (2 * phase_length))
+        return plan

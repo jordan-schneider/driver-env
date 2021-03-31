@@ -1,11 +1,14 @@
 """"Module containing a fixed control car."""
+from __future__ import annotations
 
-from typing import Iterable, Union
+from typing import TYPE_CHECKING, Iterable, Union
 
 import numpy as np
 import tensorflow as tf  # type: ignore
 from driver.car.car import Car
-from driver.world import CarWorld
+
+if TYPE_CHECKING:
+    from driver.world import CarWorld
 
 
 class FixedControlCar(Car):

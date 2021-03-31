@@ -30,9 +30,9 @@ class LegacyRewardCar(LinearRewardCar):
             **kwargs
         )
 
+    @staticmethod
     @tf.function
     def features(
-        self,
         state: Sequence[Union[tf.Tensor, tf.Variable]],
         control: Union[tf.Tensor, tf.Variable],
     ) -> tf.Tensor:

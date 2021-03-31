@@ -2,8 +2,8 @@ from typing import List, Tuple
 
 import numpy as np
 
-from driver.dynamics import Dynamics
-from driver.trajectory import Trajectory
+from .dynamics import Dynamics
+from .trajectory import Trajectory
 
 
 class Car:

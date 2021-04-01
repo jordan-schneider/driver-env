@@ -3,12 +3,13 @@ import gym  # type: ignore
 import numpy as np
 from driver.legacy.gym_driver import GymDriver
 from driver.math_utils import safe_normalize
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.extra.numpy import arrays
 from hypothesis.strategies import floats
-from numpy.testing import assert_allclose, assert_equal
+from numpy.testing import assert_allclose
 
 
+@settings(deadline=None)
 @given(
     reward=arrays(
         dtype=float, shape=(4,), elements=floats(min_value=-1, max_value=1, allow_nan=False)

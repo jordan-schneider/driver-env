@@ -12,7 +12,7 @@ def legacy_car_dynamics_step(x, y, v, angle, acc, angle_vel):
     friction = 1.0
     new_x = x + dt * tf.cos(angle) * v
     new_y = y + dt * tf.sin(angle) * v
-    new_angle = angle + dt * angle_vel
+    new_angle = angle + dt * angle_vel * v
     new_v = v + dt * (acc - v * friction)
     return new_x, new_y, new_v, new_angle
 

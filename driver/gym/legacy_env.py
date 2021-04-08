@@ -9,6 +9,7 @@ import gym  # type: ignore
 
 class LegacyEnv(CarEnv):
     def __init__(self, reward: np.ndarray):
+        self.reward_weights = reward
         world = ThreeLaneCarWorld()
         main_car = LegacyRewardCar(
             env=world,

@@ -62,7 +62,7 @@ class LegacyPlanCar(FixedPlanCar):
         **kwargs
     ):
         if init_state is None:
-            init_state = np.array([env.lane_width, 0.0, np.pi / 2.0, 0.41])
+            init_state = np.array([env.lane_width, 0.0, np.pi / 2.0, 0.41], dtype=np.float32)
         plan = self.make_legacy_plan(to_numpy(init_state))
         super().__init__(
             env,
@@ -75,12 +75,18 @@ class LegacyPlanCar(FixedPlanCar):
             **kwargs
         )
 
+    def set_init_state(self, init_state) -> None:
+        self.plan = self.make_legacy_plan(to_numpy(init_state))
+        self.reset()
+
     @staticmethod
     def make_legacy_plan(initial_state: np.ndarray, horizon: int = 50) -> List[np.ndarray]:
         assert horizon % 5 == 0
         phase_length = horizon // 5
-        plan = [np.array([0, initial_state[3]])] * phase_length
-        plan.extend([np.array([1.0, initial_state[3]])] * phase_length)
-        plan.extend([np.array([-1.0, initial_state[3]])] * phase_length)
-        plan.extend([np.array([-1.0, initial_state[3] * 1.3])] * (2 * phase_length))
+        plan = [np.array([0, initial_state[3]], dtype=np.float32)] * phase_length
+        plan.extend([np.array([1.0, initial_state[3]], dtype=np.float32)] * phase_length)
+        plan.extend([np.array([-1.0, initial_state[3]], dtype=np.float32)] * phase_length)
+        plan.extend(
+            [np.array([-1.0, initial_state[3] * 1.3], dtype=np.float32)] * (2 * phase_length)
+        )
         return plan

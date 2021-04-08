@@ -1,5 +1,6 @@
 """Utility functions for the car simulation."""
 
+import logging
 from typing import Iterable, Sequence, Union
 
 import numpy as np
@@ -8,6 +9,9 @@ import tensorflow as tf  # type: ignore
 
 @tf.function
 def legacy_car_dynamics_step(x, y, v, angle, acc, angle_vel):
+    logging.debug(
+        f"dtypes x={x.dtype}, y={y.dtype}, v={v.dtype}, angle={angle.dtype}, acc={acc.dtype}, angel_vel={angle_vel.dtype}"
+    )
     dt = 0.1
     friction = 1.0
     new_x = x + dt * tf.cos(angle) * v

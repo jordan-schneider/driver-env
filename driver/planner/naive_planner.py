@@ -36,7 +36,6 @@ class NaivePlanner(CarPlanner):
         self.planned_controls = [tf.Variable([0.0, 0.0]) for _ in range(horizon)]
         self.n_iter = n_iter
         self.optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
-        print("extra_inits:", extra_inits)
         self.extra_inits = extra_inits
 
     def initialize_mpc_reward(self):

@@ -5,11 +5,10 @@ import unittest
 
 import numpy as np
 import tensorflow as tf  # type: ignore
-
 from driver.car import FixedPlanCar
 from driver.planner.naive_planner import NaivePlanner
-from driver.world import ThreeLaneCarWorld
 from driver.planner.tests.targetSpeedRewardMaximizerCar import TargetSpeedPlannerCar
+from driver.world import ThreeLaneCarWorld
 
 
 class TargetSpeedTestCases(unittest.TestCase):
@@ -26,22 +25,6 @@ class TargetSpeedTestCases(unittest.TestCase):
         self.assertEqual(len(plan), 5)
         for i in range(len(plan)):
             np.testing.assert_allclose(plan[i].numpy(), np.array([0.0, 0.0]), atol=1e-5)
-
-    # def test_zero_friction_incorrect_speed(self):
-    #     car = TargetSpeedPlannerCar(self.world, self.init_state, 4,
-    #                                 target_speed=2., friction=0.)
-    #     self.world.add_car(car)
-    #
-    #     planner = NaivePlanner(self.world, car, horizon=5, learning_rate=5.0,
-    #                            n_iter=500)
-    #     plan = planner.generate_plan([car.state])
-    #     self.assertEqual(len(plan), 5)
-    #     print(plan)
-    #     np.testing.assert_allclose(plan[0].numpy(), np.array([10., 0.]),
-    #                                atol=1e-5)
-    #     for i in range(1, len(plan)):
-    #         np.testing.assert_allclose(plan[i].numpy(), np.array([0., 0.]),
-    #                                    atol=1e-5)
 
     def test_friction_correct_speed(self):
         friction = 0.5

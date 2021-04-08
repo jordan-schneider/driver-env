@@ -16,7 +16,6 @@ class LegacyRewardCar(LinearRewardCar):
         env: CarWorld,
         init_state: Union[np.ndarray, tf.Tensor, Iterable],
         weights: Union[np.ndarray, tf.Tensor, Iterable],
-        color: str,
         opacity: float = 1.0,
         **kwargs
     ):
@@ -24,7 +23,6 @@ class LegacyRewardCar(LinearRewardCar):
             env=env,
             init_state=init_state,
             weights=weights,
-            color=color,
             opacity=opacity,
             legacy_state=True,
             **kwargs

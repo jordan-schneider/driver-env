@@ -52,7 +52,7 @@ class LinearRewardCar(Car):
 
     @weights.setter
     def weights(self, weights):
-        self.weights_tf.assign(weights / np.linalg.norm(weights))
+        self.weights_tf.assign(safe_normalize(weights))
 
     @tf.function
     def reward_fn(self, state, control, weights=None):

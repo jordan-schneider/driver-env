@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 import numpy as np
 import tensorflow as tf  # type: ignore
 from driver.car.car import Car
+from driver.car.legacy_reward_car import LegacyRewardCar
 from driver.car.linear_reward_car import LinearRewardCar
 from driver.planner.naive_planner import NaivePlanner
 
@@ -103,5 +104,12 @@ class LinearPlannerCar(LinearRewardCar, PlannerCar):
     pass
 
 
-class LegacyPlannerCar(LinearRewardCar, PlannerCar):
-    pass
+class LegacyPlannerCar(LegacyRewardCar, PlannerCar):
+    def __init__(
+        self,
+        env: CarWorld,
+        init_state: Union[np.ndarray, tf.Tensor, Iterable],
+        weights: Union[np.ndarray, tf.Tensor, Iterable],
+        **kwargs
+    ):
+        super().__init__(env, init_state, weights, check_plans=True, **kwargs)

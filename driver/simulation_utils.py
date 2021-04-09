@@ -86,8 +86,8 @@ def batched_next_car_state(
 
 @tf.function
 def next_car_state(
-    state: Union[np.ndarray, tf.Tensor],
-    control: Union[np.ndarray, tf.Tensor],
+    state: tf.Tensor,
+    control: tf.Tensor,
     dt: float,
     friction: float = 0.0,
     legacy: bool = False,

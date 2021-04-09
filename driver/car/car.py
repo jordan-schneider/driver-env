@@ -65,7 +65,7 @@ class Car(object):
         self.env = env
         self.friction = friction
         self.dynamics_fn = get_dynamics_fn(tf.constant(friction), legacy=legacy_state)
-        self._init_state: tf.Variable = tf.constant(init_state, dtype=tf.float32)
+        self._init_state = tf.constant(init_state, dtype=tf.float32)
         self.state = init_state
 
         self.debug = debug
@@ -92,7 +92,7 @@ class Car(object):
 
     @init_state.setter
     def init_state(self, init_state):
-        self._init_state.assign(init_state)
+        self._init_state = tf.constant(init_state)
         self.reset()
 
     def step(self, dt):

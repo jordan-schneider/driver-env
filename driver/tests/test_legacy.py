@@ -15,7 +15,7 @@ from numpy.testing import assert_allclose
         dtype=float, shape=(4,), elements=floats(min_value=-1, max_value=1, allow_nan=False)
     ),
     action=arrays(
-        dtype=float, shape=(2,), elements=floats(min_value=-1, max_value=1, allow_nan=False)
+        dtype=float, shape=(2,), elements=floats(min_value=-2, max_value=2, allow_nan=False)
     ),
 )
 def test_legacy_env(reward: np.ndarray, action: np.ndarray):
@@ -33,3 +33,11 @@ def test_legacy_env(reward: np.ndarray, action: np.ndarray):
     assert_allclose(new_state, old_state, atol=0.001)
     assert abs(new_reward - old_reward) < 0.001
     assert new_done == old_done
+    assert_allclose(new_info["reward_features"], old_info["reward_features"], atol=0.001)
+
+    new_state, new_reward, new_done, new_info = new_env.step(action)
+    old_state, old_reward, old_done, old_info = old_env.step(action)
+    assert_allclose(new_state, old_state, atol=0.001)
+    assert abs(new_reward - old_reward) < 0.001
+    assert new_done == old_done
+    assert_allclose(new_info["reward_features"], old_info["reward_features"], atol=0.001)

@@ -9,6 +9,9 @@ import tensorflow as tf  # type: ignore
 
 @tf.function
 def legacy_car_dynamics_step(x, y, v, angle, acc, angle_vel):
+    acc = tf.maximum(tf.minimum(acc, 1.0), -1.0)
+    angle_vel = tf.maximum(tf.minimum(angle_vel, 1), -1.0)
+
     logging.debug(
         f"dtypes x={x.dtype}, y={y.dtype}, v={v.dtype}, angle={angle.dtype}, acc={acc.dtype}, angel_vel={angle_vel.dtype}"
     )

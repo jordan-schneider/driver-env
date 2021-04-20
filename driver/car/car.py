@@ -15,7 +15,7 @@ State = Union[np.ndarray, tf.Tensor, Iterable]
 Control = Union[None, np.ndarray, tf.Tensor, Iterable]
 
 
-class Car(object):
+class Car:
     """
     Parent class for cars.
 
@@ -66,7 +66,7 @@ class Car(object):
         self.friction = friction
         self.dynamics_fn = get_dynamics_fn(tf.constant(friction), legacy=legacy_state)
         self._init_state = tf.constant(init_state, dtype=tf.float32)
-        self.state = init_state
+        self._state = init_state
 
         self.debug = debug
         self.past_traj: List[Tuple[State, Control]] = []
@@ -81,19 +81,29 @@ class Car(object):
         self.control_already_determined_for_current_step = False
 
     def reset(self):
-        self.state = self.init_state
+        self._state = self.init_state
 
         if self.debug:
             self.past_traj = []
 
     @property
-    def init_state(self):
+    def init_state(self) -> tf.Tensor:
         return self._init_state
 
     @init_state.setter
-    def init_state(self, init_state):
+    def init_state(self, init_state) -> None:
         self._init_state = tf.constant(init_state)
         self.reset()
+
+    @property
+    def state(self) -> tf.Tensor:
+        return self._state
+
+    @state.setter
+    def state(self, state: Union[np.ndarray, tf.Tensor]) -> None:
+        if isinstance(state, np.ndarray):
+            state = tf.constant(state)
+        self._state = state
 
     def step(self, dt):
         """
@@ -103,10 +113,10 @@ class Car(object):
             dt: the amount of time to increment the simulation by.
         """
         if self.debug:
-            self.past_traj.append((self.state, self.control))
+            self.past_traj.append((self._state, self.control))
 
         self.control_already_determined_for_current_step = False
-        self.state = self.dynamics_fn(self.state, self.control, dt)
+        self._state = self.dynamics_fn(self._state, self.control, dt)
 
     @tf.function
     def reward_fn(self, world_state, self_control):

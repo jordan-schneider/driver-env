@@ -28,10 +28,18 @@ class CarEnv(gym.Env):
         self.main_car_index = main_car_index
         super().__init__()
 
-    def get_state_from_car_state(self, state: Iterable[tf.Tensor]):
+    def get_state_from_car_state(self, state: Iterable[tf.Tensor]) -> np.ndarray:
         """Converts a CarWorld.state (a list of tf.Tensors) into a np array."""
         state_np = np.stack([car_state.numpy() for car_state in state], axis=0)
         return state_np
+
+    @property
+    def state(self) -> np.ndarray:
+        return self.get_state_from_car_state(self.car_world.state)
+
+    @state.setter
+    def state(self, state: np.ndarray) -> None:
+        self.car_world.state = state
 
     def reset(self):
         self.car_world.reset()

@@ -8,7 +8,7 @@ import tensorflow as tf  # type: ignore
 from driver.car import Car
 
 
-class CarWorld(object):
+class CarWorld:
     """
     Contains the objects in a driving scenario - cars, lanes, obstacles, etc.
 

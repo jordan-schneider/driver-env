@@ -7,7 +7,7 @@ from driver.gym.car_env import CarEnv
 from driver.world import ThreeLaneCarWorld
 
 import gym  # type: ignore
-from gym.spaces.box import Box
+from gym.spaces.box import Box  # type: ignore
 
 
 class LegacyEnv(CarEnv):

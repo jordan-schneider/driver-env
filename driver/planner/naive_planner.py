@@ -1,6 +1,7 @@
 """Planner that assumes all other cars travel at constant velocity."""
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, List, Optional, Union
 
 import numpy as np
@@ -165,8 +166,7 @@ class NaivePlanner(CarPlanner):
                 v, g = tfp.math.value_and_gradient(flat_controls_to_loss, flat_controls[0])
                 return tf.convert_to_tensor([v]), tf.convert_to_tensor([g])
 
-        losses = []
-        opts = []
+        best_loss = float("inf")
         for init_control in init_controls:
             for control, val in zip(self.planned_controls, init_control):
                 control.assign(val)
@@ -178,16 +178,22 @@ class NaivePlanner(CarPlanner):
                     max_iterations=200,
                     tolerance=1e-12,
                 )
-                losses.append(opt.objective_value.numpy()[0])
+                current_loss = opt.objective_value.numpy()[0]
+                if current_loss < best_loss:
+                    best_loss = current_loss
+                    best_plan = list(tf.reshape(opt.position, (self.horizon, 2)).numpy())
 
-                opts.append(list(tf.reshape(opt.position, (self.horizon, 2)).numpy()))
             else:
-                for _ in range(self.n_iter):
+                logging.debug(self.n_iter)
+                for i in range(self.n_iter):
                     self.optimizer.minimize(loss, self.planned_controls)
-                losses.append(loss().numpy())
-                opts.append([c.numpy() for c in self.planned_controls])
+                    current_loss = loss().numpy()
+                    if current_loss < best_loss:
+                        logging.debug(f"Current best at iter {i}, loss={current_loss}")
+                        best_loss = current_loss
+                        best_plan = [c.numpy() for c in self.planned_controls]
 
-        for control, val in zip(self.planned_controls, opts[losses.index(min(losses))]):
+        for control, val in zip(self.planned_controls, best_plan):
             control.assign(val)
 
         return self.planned_controls

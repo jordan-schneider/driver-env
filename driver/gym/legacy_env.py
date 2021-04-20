@@ -58,7 +58,7 @@ class LegacyEnv(CarEnv):
     def reset(self) -> np.ndarray:
         self.t = 0
 
-        if self.random_start_space:
+        if self.random_start:
             self.main_car.init_state = self.random_start_space.sample()
 
         return super().reset()

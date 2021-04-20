@@ -20,8 +20,8 @@ class LegacyEnv(CarEnv):
         self.random_start = random_start
 
         self.random_start_space = Box(
-            low=np.array([-3 * world.lane_width, -0.6, 0, -1]),
-            high=np.array([3 * world.lane_width, 0.3, 2 * np.pi, 2]),
+            low=np.array([-3 * world.lane_width, -0.6, 0, -1], dtype=np.float32),
+            high=np.array([3 * world.lane_width, 0.3, 2 * np.pi, 2], dtype=np.float32),
         )
 
         if self.random_start:

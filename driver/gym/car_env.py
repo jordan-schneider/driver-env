@@ -22,7 +22,9 @@ class CarEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=-100, high=-100, shape=(len(self.car_world.cars), 4)
         )
-        self.action_space = spaces.Box(low=np.array([-5, np.pi]), high=np.array([5, np.pi]))
+        self.action_space = spaces.Box(
+            low=np.array([-5, np.pi], dtype=np.float32), high=np.array([5, np.pi], dtype=np.float32)
+        )
         self.main_car_index = main_car_index
         super().__init__()
 

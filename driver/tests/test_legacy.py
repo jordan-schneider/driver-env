@@ -1,8 +1,8 @@
-import warnings
-
 import driver.gym
 import gym  # type: ignore
 import numpy as np
+import tensorflow as tf  # type: ignore
+from driver.gym.legacy_env import LegacyEnv
 from driver.legacy.gym_driver import GymDriver
 from driver.math_utils import safe_normalize
 from hypothesis import given, settings
@@ -10,21 +10,41 @@ from hypothesis.extra.numpy import arrays
 from hypothesis.strategies import floats
 from numpy.testing import assert_allclose, assert_array_equal
 
-warnings.filterwarnings("ignore", "tensorflow")
+ATOL = 1.0
+
+
+@given(
+    state=arrays(
+        dtype=np.float32,
+        shape=(2, 4),
+        elements=floats(min_value=-10, max_value=10, allow_nan=False, width=32),
+    )
+)
+def test_features(state: np.ndarray):
+    new_env = LegacyEnv(np.zeros(4))
+
+    new_features = new_env.main_car.features(tf.constant(state), None).numpy()
+    old_features = GymDriver.get_features(state)
+
+    assert_allclose(new_features, old_features, atol=ATOL)
 
 
 @settings(deadline=None)
 @given(
     reward=arrays(
-        dtype=float, shape=(4,), elements=floats(min_value=-1, max_value=1, allow_nan=False)
+        dtype=np.float32,
+        shape=(4,),
+        elements=floats(min_value=-1, max_value=1, allow_nan=False, width=32),
     ),
     action=arrays(
-        dtype=float, shape=(2,), elements=floats(min_value=-2, max_value=2, allow_nan=False)
+        dtype=np.float32,
+        shape=(2,),
+        elements=floats(min_value=-2, max_value=2, allow_nan=False, width=32),
     ),
 )
 def test_consistency(reward: np.ndarray, action: np.ndarray):
     reward = safe_normalize(reward)
-    new_env = gym.make("LegacyDriver-v1", reward=reward)
+    new_env = LegacyEnv(reward=reward)
     old_env = GymDriver(reward=reward, horizon=50)
 
     new_state = new_env.reset()
@@ -34,26 +54,30 @@ def test_consistency(reward: np.ndarray, action: np.ndarray):
 
     new_state, new_reward, new_done, new_info = new_env.step(action)
     old_state, old_reward, old_done, old_info = old_env.step(action)
-    assert_allclose(new_state, old_state, atol=0.001)
-    assert abs(new_reward - old_reward) < 0.001
+    assert_allclose(new_state, old_state, atol=ATOL)
+    assert abs(new_reward - old_reward) < ATOL
     assert new_done == old_done
-    assert_allclose(new_info["reward_features"], old_info["reward_features"], atol=0.001)
+    assert_allclose(new_info["reward_features"], old_info["reward_features"], atol=ATOL)
 
     new_state, new_reward, new_done, new_info = new_env.step(action)
     old_state, old_reward, old_done, old_info = old_env.step(action)
-    assert_allclose(new_state, old_state, atol=0.001)
-    assert abs(new_reward - old_reward) < 0.001
+    assert_allclose(new_state, old_state, atol=ATOL)
+    assert abs(new_reward - old_reward) < ATOL
     assert new_done == old_done
-    assert_allclose(new_info["reward_features"], old_info["reward_features"], atol=0.001)
+    assert_allclose(new_info["reward_features"], old_info["reward_features"], atol=ATOL)
 
 
 @settings(deadline=None)
 @given(
     reward=arrays(
-        dtype=float, shape=(4,), elements=floats(min_value=-1, max_value=1, allow_nan=False)
+        dtype=np.float32,
+        shape=(4,),
+        elements=floats(min_value=-1, max_value=1, allow_nan=False, width=32),
     ),
     action=arrays(
-        dtype=float, shape=(2,), elements=floats(min_value=-2, max_value=2, allow_nan=False)
+        dtype=np.float32,
+        shape=(2,),
+        elements=floats(min_value=-2, max_value=2, allow_nan=False, width=32),
     ),
 )
 def test_determinism(reward: np.ndarray, action: np.ndarray):

@@ -12,7 +12,7 @@ import gym.spaces  # type: ignore
 from ..math_utils import safe_normalize
 
 
-class LegacyEnv:
+class LegacyEnv(gym.Env):
     HORIZON: Final[int] = 50
 
     def __init__(self, reward: np.ndarray, random_start: bool = False, time_in_state: bool = False):
@@ -100,8 +100,9 @@ class LegacyEnv:
         self.t += 1
         done = self.t >= self.HORIZON
 
-        if self.time_in_state:
-            state = (car_state, self.HORIZON - self.t)
+        state: Union[np.ndarray, Tuple[np.ndarray, int]] = (
+            (car_state, self.HORIZON - self.t) if self.time_in_state else car_state
+        )
 
         return state, reward, done, info
 

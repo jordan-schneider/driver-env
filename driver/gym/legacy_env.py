@@ -14,6 +14,7 @@ from ..math_utils import safe_normalize
 
 class LegacyEnv(gym.Env):
     HORIZON: Final[int] = 50
+    State = Union[np.ndarray, Tuple[np.ndarray, int]]
 
     def __init__(self, reward: np.ndarray, random_start: bool = False, time_in_state: bool = False):
         """Attempts to replicate legacy/gym.py as closely as possible while using tf ops.
@@ -82,7 +83,7 @@ class LegacyEnv(gym.Env):
         return self.car_env.state
 
     @state.setter
-    def state(self, state: Union[np.ndarray, Tuple[np.ndarray, int]]) -> None:
+    def state(self, state: State) -> None:
         if isinstance(state, tuple):
             car_state, time_remaining = state
             self.t = self.HORIZON - time_remaining
@@ -90,9 +91,16 @@ class LegacyEnv(gym.Env):
         else:
             self.car_env.state = state
 
-    def step(
-        self, action: np.ndarray
-    ) -> Tuple[Union[np.ndarray, Tuple[np.ndarray, int]], float, bool, Dict]:
+    def features(self, state: State) -> np.ndarray:
+        if isinstance(state, tuple):
+            state = state[0]
+        elif len(state.shape) == 2 and state.shape[1] == 9:
+            # We got a pre-flattened batch of states
+            state = state[:, :8].reshape((-1, 2, 4))
+
+        return self.main_car.features(state, None).numpy()
+
+    def step(self, action: np.ndarray) -> Tuple[State, float, bool, Dict]:
         action = action.astype(np.float32)
         car_state, reward, _, info = self.car_env.step(action)
         info["reward_features"] = self.main_car.features(car_state, action).numpy()
@@ -106,7 +114,7 @@ class LegacyEnv(gym.Env):
 
         return state, reward, done, info
 
-    def reset(self) -> np.ndarray:
+    def reset(self) -> State:
         self.t = 0
 
         if self.random_start:
@@ -128,14 +136,12 @@ class RandomLegacyEnv(LegacyEnv):
     def generate_reward(self) -> np.ndarray:
         return safe_normalize(np.random.random(self.REWARD_SHAPE))
 
-    def step(
-        self, action: np.ndarray
-    ) -> Tuple[Union[np.ndarray, Tuple[np.ndarray, int]], float, bool, Dict]:
+    def step(self, action: np.ndarray) -> Tuple[LegacyEnv.State, float, bool, Dict]:
         state, reward, done, info = super().step(action)
         info["reward_weights"] = self.reward_weights
         return state, reward, done, info
 
-    def reset(self) -> np.ndarray:
+    def reset(self) -> LegacyEnv.State:
         self.reward_weights = self.generate_reward()
         return super().reset()
 

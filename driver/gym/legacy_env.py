@@ -30,14 +30,16 @@ class LegacyEnv(gym.Env):
         self.time_in_state = time_in_state
 
         car_space = gym.spaces.Box(
-            low=np.array([float("-inf"), float("-inf"), 0, -1], dtype=np.float32),
-            high=np.array([float("inf"), float("inf"), 2 * np.pi, 1]),
+            low=np.array([[float("-inf"), float("-inf"), 0, -1]] * 2, dtype=np.float32),
+            high=np.array([[float("inf"), float("inf"), 2 * np.pi, 1]] * 2),
         )
 
-        if time_in_state:
+        if self.time_in_state:
             self.observation_space = gym.spaces.Tuple(
-                car_space, gym.spaces.Discrete(self.HORIZON + 1)
+                (car_space, gym.spaces.Discrete(self.HORIZON + 1))
             )
+        else:
+            self.observation_space = car_space
 
         self.random_start = random_start
         self.random_start_space = gym.spaces.Box(
@@ -120,7 +122,10 @@ class LegacyEnv(gym.Env):
         if self.random_start:
             self.main_car.init_state = self.random_start_space.sample()
 
-        return self.car_env.reset()
+        car_state = self.car_env.reset()
+        state = (car_state, self.HORIZON) if self.time_in_state else car_state
+
+        return state
 
 
 class RandomLegacyEnv(LegacyEnv):

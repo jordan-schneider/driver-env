@@ -184,7 +184,7 @@ class NaivePlanner(CarPlanner):
                     best_plan = list(tf.reshape(opt.position, (self.horizon, 2)).numpy())
 
             else:
-                logging.debug(self.n_iter)
+                logging.debug(f"n traj opt iterations={self.n_iter}")
                 for i in range(self.n_iter):
                     self.optimizer.minimize(loss, self.planned_controls)
                     current_loss = loss().numpy()
@@ -197,6 +197,3 @@ class NaivePlanner(CarPlanner):
             control.assign(val)
 
         return self.planned_controls
-
-
-##

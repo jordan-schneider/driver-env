@@ -187,11 +187,11 @@ class NaivePlanner(CarPlanner):
                 logging.debug(f"n traj opt iterations={self.n_iter}")
                 for i in range(self.n_iter):
                     self.optimizer.minimize(loss, self.planned_controls)
-                    current_loss = loss().numpy()
-                    if current_loss < best_loss:
-                        logging.debug(f"Current best at iter {i}, loss={current_loss}")
-                        best_loss = current_loss
-                        best_plan = [c.numpy() for c in self.planned_controls]
+                
+                current_loss = loss().numpy()
+                if current_loss < best_loss:
+                    best_loss = current_loss
+                    best_plan = [c.numpy() for c in self.planned_controls]
 
         for control, val in zip(self.planned_controls, best_plan):
             control.assign(val)

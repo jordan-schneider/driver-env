@@ -24,7 +24,7 @@ class NaivePlanner(CarPlanner):
         world: CarWorld,
         car: Car,
         horizon: int,
-        learning_rate: float = 0.1,
+        optimzier: tf.keras.optimizers.Optimizer = tf.keras.optimizers.SGD(learning_rate=0.1),
         n_iter: int = 100,
         leaf_evaluation=None,
         extra_inits=False,
@@ -32,11 +32,10 @@ class NaivePlanner(CarPlanner):
         super().__init__(world, car)
         self.leaf_evaluation = leaf_evaluation
         self.reward_func = self.initialize_mpc_reward()
-        self.learning_rate = learning_rate
         self.horizon = horizon
         self.planned_controls = [tf.Variable([0.0, 0.0]) for _ in range(horizon)]
         self.n_iter = n_iter
-        self.optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
+        self.optimizer = optimzier
         self.extra_inits = extra_inits
 
     def initialize_mpc_reward(self):
@@ -187,7 +186,7 @@ class NaivePlanner(CarPlanner):
                 logging.debug(f"n traj opt iterations={self.n_iter}")
                 for i in range(self.n_iter):
                     self.optimizer.minimize(loss, self.planned_controls)
-                
+
                 current_loss = loss().numpy()
                 if current_loss < best_loss:
                     best_loss = current_loss

@@ -28,6 +28,8 @@ class NaivePlanner(CarPlanner):
         n_iter: int = 100,
         leaf_evaluation=None,
         extra_inits=False,
+        init_controls: Optional[List[List[List[float]]]] = None,
+        log_best_init: bool = False,
     ):
         super().__init__(world, car)
         self.leaf_evaluation = leaf_evaluation
@@ -37,6 +39,8 @@ class NaivePlanner(CarPlanner):
         self.n_iter = n_iter
         self.optimizer = optimizer
         self.extra_inits = extra_inits
+        self.init_controls = init_controls
+        self.log_best_init = log_best_init
 
     def initialize_mpc_reward(self):
         @tf.function
@@ -118,10 +122,10 @@ class NaivePlanner(CarPlanner):
 
         """
 
-        init_controls = []
-        init_controls.append([[0.0, 0.0] for _ in range(len(self.planned_controls))])
-        init_controls.append([[0, -5 * 0.13] for _ in range(len(self.planned_controls))])
-        init_controls.append([[0, 5 * 0.13] for _ in range(len(self.planned_controls))])
+        init_controls = self.init_controls if self.init_controls is not None else []
+        init_controls.append([[0.0, 0.0]] * len(self.planned_controls))
+        init_controls.append([[0, -5 * 0.13]] * len(self.planned_controls))
+        init_controls.append([[0, 5 * 0.13]] * len(self.planned_controls))
 
         if self.extra_inits:
             init_controls.append(
@@ -158,7 +162,7 @@ class NaivePlanner(CarPlanner):
                     init_state, tf.reshape(flat_controls, (self.horizon, 2)), weights
                 )
 
-            import tensorflow_probability as tfp
+            import tensorflow_probability as tfp  # type: ignore
 
             @tf.function
             def loss_and_grad(flat_controls):
@@ -166,7 +170,9 @@ class NaivePlanner(CarPlanner):
                 return tf.convert_to_tensor([v]), tf.convert_to_tensor([g])
 
         best_loss = float("inf")
-        for init_control in init_controls:
+        best_init = -1
+        for i, init_control in enumerate(init_controls):
+            logging.debug(f"init_control={init_control}")
             for control, val in zip(self.planned_controls, init_control):
                 control.assign(val)
 
@@ -184,13 +190,17 @@ class NaivePlanner(CarPlanner):
 
             else:
                 logging.debug(f"n traj opt iterations={self.n_iter}")
-                for i in range(self.n_iter):
+                for _ in range(self.n_iter):
                     self.optimizer.minimize(loss, self.planned_controls)
 
                 current_loss = loss().numpy()
                 if current_loss < best_loss:
                     best_loss = current_loss
                     best_plan = [c.numpy() for c in self.planned_controls]
+                    best_init = i
+
+        if self.log_best_init:
+            logging.info(f"Best traj found from init={best_init}")
 
         for control, val in zip(self.planned_controls, best_plan):
             control.assign(val)

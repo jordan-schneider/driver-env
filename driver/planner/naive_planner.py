@@ -122,7 +122,7 @@ class NaivePlanner(CarPlanner):
 
         """
 
-        init_controls = self.init_controls if self.init_controls is not None else []
+        init_controls = list(self.init_controls) if self.init_controls is not None else []
         init_controls.append([[0.0, 0.0]] * len(self.planned_controls))
         init_controls.append([[0, -5 * 0.13]] * len(self.planned_controls))
         init_controls.append([[0, 5 * 0.13]] * len(self.planned_controls))

@@ -145,7 +145,10 @@ class Car:
         """
 
         if control is not None:
-            self.control = tf.constant(control, dtype=tf.float32)
+            if isinstance(control, tf.Tensor):
+                self.control = control
+            else:
+                self.control = tf.constant(control, dtype=tf.float32)
         else:
             if not self.control_already_determined_for_current_step:
                 self.control = self._get_next_control()

@@ -12,9 +12,6 @@ def legacy_car_dynamics_step(x, y, v, angle, acc, angle_vel):
     acc = tf.maximum(tf.minimum(acc, 1.0), -1.0)
     angle_vel = tf.maximum(tf.minimum(angle_vel, 1), -1.0)
 
-    logging.debug(
-        f"dtypes x={x.dtype}, y={y.dtype}, v={v.dtype}, angle={angle.dtype}, acc={acc.dtype}, angel_vel={angle_vel.dtype}"
-    )
     dt = 0.1
     friction = 1.0
     new_x = x + dt * tf.cos(angle) * v
@@ -22,6 +19,23 @@ def legacy_car_dynamics_step(x, y, v, angle, acc, angle_vel):
     new_angle = angle + dt * angle_vel * v
     new_v = v + dt * (acc - v * friction)
     return new_x, new_y, new_v, new_angle
+
+
+@tf.function
+def legacy_car_dynamics_step_tf(state, action):
+    acc = tf.maximum(tf.minimum(action[1], 1.0), -1.0)
+    angle_vel = tf.maximum(tf.minimum(action[0], 1), -1.0)
+
+    x, y, angle, v = state[0], state[1], state[2], state[3]
+
+    state += [
+        0.1 * tf.cos(angle) * v,
+        0.1 * tf.sin(angle) * v,
+        0.1 * angle_vel * v,
+        0.1 * (acc - v),
+    ]
+
+    return state
 
 
 @tf.function

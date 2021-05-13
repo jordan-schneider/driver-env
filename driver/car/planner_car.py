@@ -58,7 +58,7 @@ class PlannerCar(Car):
 
         self.planner = NaivePlanner(self.env, self, self.horizon, **planner_args)
 
-    def _get_next_control(self):
+    def _get_next_control(self, return_loss: bool = False):
         if self.planner is None:
             self.initialize_planner(self.planner_args)
             assert self.planner is not None
@@ -68,7 +68,6 @@ class PlannerCar(Car):
             for i, other_car in enumerate(self.env.cars):
                 if i == self.index:
                     other_plan = [tf.constant([0.0], dtype=tf.float32)] * self.horizon
-                    other_plan = tf.stack(other_plan, axis=0)
                 else:
                     other_plan = []
                     for j in range(self.horizon):
@@ -85,12 +84,16 @@ class PlannerCar(Car):
                                     other_plan.append(tf.constant([0.0, 0.0], dtype=tf.float32))
                         else:
                             other_plan.append(tf.constant([0.0, 0.0], dtype=tf.float32))
-                    other_plan = tf.stack(other_plan, axis=0)
-
+                other_plan = tf.stack(other_plan, axis=0)
                 other_plans.append(other_plan)
-            self.plan = self.planner.generate_plan(other_controls=other_plans)
+            self.plan, loss = self.planner.generate_plan(
+                other_controls=other_plans, return_loss=True
+            )
         else:
-            self.plan = self.planner.generate_plan()
+            self.plan, loss = self.planner.generate_plan(return_loss=True)
+
+        if return_loss:
+            return tf.identity(self.plan[0]), loss
 
         return tf.identity(self.plan[0])
 

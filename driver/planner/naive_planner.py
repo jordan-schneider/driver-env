@@ -8,10 +8,13 @@ import numpy as np
 import tensorflow as tf  # type: ignore
 from driver.car.car import Car
 from driver.planner.car_planner import CarPlanner
-from driver.simulation_utils import next_car_state
+from driver.simulation_utils import legacy_car_dynamics_step, next_car_state
 
 if TYPE_CHECKING:
     from driver.world import CarWorld
+
+# TODO(joschnei): This class is still buggy. I ended up routing around it. DO NOT USE.
+# TODO(joschnei): Deprecate this class entirely.
 
 
 class NaivePlanner(CarPlanner):
@@ -30,10 +33,11 @@ class NaivePlanner(CarPlanner):
         extra_inits=False,
         init_controls: Optional[List[List[List[float]]]] = None,
         log_best_init: bool = False,
+        legacy_dynamics: bool = False,
     ):
         super().__init__(world, car)
         self.leaf_evaluation = leaf_evaluation
-        self.reward_func = self.initialize_mpc_reward()
+        self.reward_func = self.initialize_mpc_reward(legacy=legacy_dynamics)
         self.horizon = horizon
         self.planned_controls = [tf.Variable([0.0, 0.0]) for _ in range(horizon)]
         self.n_iter = n_iter
@@ -41,48 +45,59 @@ class NaivePlanner(CarPlanner):
         self.extra_inits = extra_inits
         self.init_controls = init_controls
         self.log_best_init = log_best_init
+        self.legacy = legacy_dynamics
 
-    def initialize_mpc_reward(self):
+    def initialize_mpc_reward(self, legacy: bool = False):
         @tf.function
         def mpc_reward(
             init_state: Union[tf.Tensor, tf.Variable],
             controls: Union[tf.Tensor, tf.Variable],
             other_controls: Optional[List[Union[tf.Tensor, tf.Variable]]] = None,
-            weights: Union[None, tf.Tensor, tf.Variable, np.ndarray] = None,
+            weights: Union[None, tf.Tensor, tf.Variable] = None,
         ):
             world_state = init_state
             dt = self.world.dt
             r = 0
 
-            for ctrl_idx in range(self.horizon):
+            for ctrl_idx in tf.range(self.horizon):
                 control = controls[ctrl_idx]
                 new_state = []
-                for i, car in enumerate(self.world.cars):
+                for i, car in tf.range(2):
                     x = world_state[i]
-                    if i == self.car.index:
+                    if hasattr(car, "dynamics_fn"):
+                        logging.debug(f"Using actual dynamics for car={i}")
                         new_x = car.dynamics_fn(x, control, dt)
                     else:
-                        # we assume 0 friction
+                        logging.debug(f"Using assumed dynamics for car={i}")
                         if other_controls is not None:
                             v, angle = x[2], x[3]
+
+                            # TODO(joschnei): This is flipped in the legacy env, this might be a huge bug.
                             acc, ang_vel = (
                                 other_controls[i][ctrl_idx][0],
                                 other_controls[i][ctrl_idx][1],
                             )
-                            update = tf.stack(
-                                [
-                                    tf.cos(angle) * (v * dt + 0.5 * acc * dt ** 2),
-                                    tf.sin(angle) * (v * dt + 0.5 * acc * dt ** 2),
-                                    acc * dt,
-                                    ang_vel * dt,
-                                ]
-                            )
+
+                            if legacy:
+                                logging.debug("Legacy dynamics")
+                                new_x = legacy_car_dynamics_step(x[0], x[1], v, angle, acc, ang_vel)
+                            else:
+                                # we assume 0 friction
+                                update = tf.stack(
+                                    [
+                                        tf.cos(angle) * (v * dt + 0.5 * acc * dt ** 2),
+                                        tf.sin(angle) * (v * dt + 0.5 * acc * dt ** 2),
+                                        acc * dt,
+                                        ang_vel * dt,
+                                    ]
+                                )
+                                new_x = x + update
                         else:
                             v, angle = x[2], x[3]
                             update = tf.stack(
                                 [tf.cos(angle) * v * dt, tf.sin(angle) * v * dt, 0.0, 0.0]
                             )
-                        new_x = x + update
+                            new_x = x + update
                     new_state.append(new_x)
                 world_state = tf.stack(new_state, axis=0)
                 if ctrl_idx == self.horizon - 1 and self.leaf_evaluation is not None:
@@ -102,6 +117,7 @@ class NaivePlanner(CarPlanner):
         weights: Union[None, tf.Tensor, tf.Variable, np.ndarray] = None,
         other_controls: Optional[List] = None,
         use_lbfgs=False,
+        return_loss: bool = False,
     ) -> List[tf.Variable]:
 
         """
@@ -123,9 +139,15 @@ class NaivePlanner(CarPlanner):
         """
 
         init_controls = list(self.init_controls) if self.init_controls is not None else []
-        init_controls.append([[0.0, 0.0]] * len(self.planned_controls))
-        init_controls.append([[0, -5 * 0.13]] * len(self.planned_controls))
-        init_controls.append([[0, 5 * 0.13]] * len(self.planned_controls))
+
+        if self.legacy:
+            init_controls.append([[0.0, 0.0]] * len(self.planned_controls))
+            init_controls.append([[-5 * 0.13, 0]] * len(self.planned_controls))
+            init_controls.append([[5 * 0.13, 0]] * len(self.planned_controls))
+        else:
+            init_controls.append([[0.0, 0.0]] * len(self.planned_controls))
+            init_controls.append([[0, -5 * 0.13]] * len(self.planned_controls))
+            init_controls.append([[0, 5 * 0.13]] * len(self.planned_controls))
 
         if self.extra_inits:
             init_controls.append(
@@ -202,7 +224,9 @@ class NaivePlanner(CarPlanner):
         if self.log_best_init:
             logging.info(f"Best traj found from init={best_init}")
 
+        logging.debug(f"Best loss={best_loss}")
+
         for control, val in zip(self.planned_controls, best_plan):
             control.assign(val)
 
-        return self.planned_controls
+        return self.planned_controls, best_loss

@@ -66,7 +66,7 @@ class Car:
         self.friction = friction
         self.dynamics_fn = get_dynamics_fn(tf.constant(friction), legacy=legacy_state)
         self._init_state = tf.constant(init_state, dtype=tf.float32)
-        self._state = init_state
+        self._state = self._init_state
 
         self.debug = debug
         self.past_traj: List[Tuple[State, Control]] = []

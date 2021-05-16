@@ -1,8 +1,8 @@
-import driver.gym
+import driver.gym_env
 import gym  # type: ignore
 import numpy as np
 import tensorflow as tf  # type: ignore
-from driver.gym.legacy_env import LegacyEnv
+from driver.gym_env.legacy_env import LegacyEnv
 from driver.legacy.gym_driver import GymDriver
 from driver.math_utils import safe_normalize
 from hypothesis import given, settings
@@ -13,6 +13,7 @@ from numpy.testing import assert_allclose, assert_array_equal
 ATOL = 1.0
 
 
+@settings(deadline=None)
 @given(
     state=arrays(
         dtype=np.float32,

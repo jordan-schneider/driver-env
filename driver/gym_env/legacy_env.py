@@ -3,7 +3,7 @@ from typing import Dict, Final, Tuple, Union
 import numpy as np
 from driver.car.fixed_plan_car import LegacyPlanCar
 from driver.car.legacy_reward_car import LegacyRewardCar
-from driver.gym.car_env import CarEnv
+from driver.gym_env.car_env import CarEnv
 from driver.world import ThreeLaneCarWorld
 
 import gym  # type: ignore

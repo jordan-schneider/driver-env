@@ -1,13 +1,12 @@
 from typing import Dict, Final, Tuple, Union
 
+import gym  # type: ignore
+import gym.spaces  # type: ignore
 import numpy as np
 from driver.car.fixed_plan_car import LegacyPlanCar
 from driver.car.legacy_reward_car import LegacyRewardCar
 from driver.gym_env.car_env import CarEnv
 from driver.world import ThreeLaneCarWorld
-
-import gym  # type: ignore
-import gym.spaces  # type: ignore
 
 from ..math_utils import safe_normalize
 
@@ -16,13 +15,20 @@ class LegacyEnv(gym.Env):
     HORIZON: Final[int] = 50
     State = Union[np.ndarray, Tuple[np.ndarray, int]]
 
-    def __init__(self, reward: np.ndarray, random_start: bool = False, time_in_state: bool = False):
+    def __init__(
+        self,
+        reward: np.ndarray,
+        random_start: bool = False,
+        time_in_state: bool = False,
+        quadratic: bool = False,
+    ):
         """Attempts to replicate legacy/gym.py as closely as possible while using tf ops.
 
         Args:
             reward (np.ndarray): Weights of linear reward features
             random_start (bool, optional): Should the environment start at a random state after reset? Defaults to False.
             time_in_state (bool, optional): Should the state include how long is left in the episode? Defaults to False.
+            quadratic (bool, optional): Use quadratic reward features for use with LQR?
         """
         self.reward_weights = reward.astype(np.float32)
         world = ThreeLaneCarWorld()
@@ -57,6 +63,7 @@ class LegacyEnv(gym.Env):
             init_state=init_state,
             weights=self.reward_weights,
             color="white",
+            quadratic=quadratic,
         )
 
         other_car = LegacyPlanCar(

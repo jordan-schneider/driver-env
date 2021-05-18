@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -18,7 +18,9 @@ class Driver(DrivingSimulation):
         self.feed_bounds = self.state_bounds + self.ctrl_bounds
         self.num_of_features = 4
 
-    def get_features(self) -> List[float]:
+    def get_features(self, actions: Optional[np.ndarray] = None) -> List[float]:
+        if actions is not None:
+            self.set_ctrl(actions)
         recording = np.array(self.get_recording(all_info=False))
 
         # staying in lane (higher is better)
@@ -64,14 +66,11 @@ class Driver(DrivingSimulation):
         return (self.robot.state, self.human.state)
 
     def set_ctrl(self, value: np.ndarray) -> None:
-        arr = np.array([[0] * self.input_size] * self.total_time).astype(float)
-        interval_count = len(value) // self.input_size
-        interval_time = int(self.total_time / interval_count)
-        j = 0
-        for i in range(interval_count):
-            arr[i * interval_time : (i + 1) * interval_time] = [value[j], value[j + 1]]
-            j += 2
-        self.ctrl = arr
+        if len(value.shape) == 1:
+            value = value.reshape((-1, 2))
+
+        repeats = int(np.ceil(self.total_time / len(value)))
+        self.ctrl = np.repeat(value, repeats, axis=0)[: self.total_time]
 
     def feed(self, value: np.ndarray) -> None:
         # I don't know why this alias is here but I'm keeping it.

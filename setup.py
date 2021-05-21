@@ -5,7 +5,7 @@ setup(
     version="0.1",
     packages=[
         "driver",
-        "driver.gym",
+        "driver.gym_env",
         "driver.car",
         "driver.legacy",
         "driver.planner",

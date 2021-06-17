@@ -3,8 +3,9 @@
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
-import tensorflow as tf  # type: ignore
+import tensorflow as tf
 
+from car.fixed_plan_car import FixedPlanCar, LegacyPlanCar  # type: ignore
 from driver.car import Car
 
 
@@ -159,6 +160,30 @@ class ThreeLaneCarWorld(CarWorld):
         lane = StraightLane((0.0, -5.0), (0.0, 10.0), self.lane_width)
         lanes = [lane.shifted(1), lane, lane.shifted(-1)]
         super().__init__(dt=dt, lanes=lanes, **kwargs)
+
+
+class TwoTrajectoryWorld(ThreeLaneCarWorld):
+    def __init__(self, dt, good_plan, bad_plan, **kwargs):
+        super().__init__(
+            dt=dt, visualizer_args={"legacy_state": True, "follow_main_car": True}, **kwargs
+        )
+        # state = [x, y, angel, vel]
+        self.good_car = FixedPlanCar(
+            env=self,
+            init_state=[0.0, -0.3, np.pi / 2.0, 0.4],
+            plan=good_plan,
+            color="blue",
+            legacy_state=True,
+        )
+        self.bad_car = FixedPlanCar(
+            env=self,
+            init_state=[0.0, -0.3, np.pi / 2.0, 0.4],
+            plan=bad_plan,
+            color="red",
+            legacy_state=True,
+        )
+        self.other_car = LegacyPlanCar(env=self)
+        self.add_cars([self.good_car, self.bad_car, self.other_car])
 
 
 class TwoLaneCarWorld(CarWorld):

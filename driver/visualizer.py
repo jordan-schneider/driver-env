@@ -4,10 +4,9 @@ import math
 from os.path import dirname, join
 from typing import Dict, Optional
 
-import numpy as np
 import matplotlib
 import matplotlib.cm
-
+import numpy as np
 import pyglet
 import pyglet.gl as gl
 import pyglet.graphics as graphics
@@ -16,7 +15,7 @@ from driver.car import Car, LinearRewardCar
 from driver.world import CarWorld, StraightLane
 
 ##
-default_asset_dir = join(dirname(__file__), "assets")
+default_asset_dir = join(dirname(__file__), "imgs")
 
 
 def centered_image(filename):
@@ -37,8 +36,7 @@ def car_sprite(
     Helper function that returns a sprite of an appropriately-colored car.
     """
     sprite = pyglet.sprite.Sprite(
-        centered_image(join(asset_dir, "car-{}.png".format(color))),
-        subpixel=True,
+        centered_image(join(asset_dir, "car-{}.png".format(color))), subpixel=True,
     )
     sprite.scale = scale
     return sprite
@@ -61,6 +59,7 @@ class CarVisualizer(object):
         follow_main_car: bool = False,
         window_args: Optional[Dict] = None,
         asset_dir: Optional[str] = None,
+        legacy_state: bool = False,
     ):
         """
         Initializes this car visualizer.
@@ -93,15 +92,7 @@ class CarVisualizer(object):
 
         self.car_sprites = {
             c: car_sprite(c, asset_dir=self.asset_dir)
-            for c in [
-                "red",
-                "yellow",
-                "purple",
-                "white",
-                "orange",
-                "gray",
-                "blue",
-            ]
+            for c in ["red", "yellow", "purple", "white", "orange", "gray", "blue",]
         }
         self.label = pyglet.text.Label(
             "Speed: ",
@@ -126,6 +117,8 @@ class CarVisualizer(object):
         self.fixed_heatmap_scale = False
         self.min_heatmap_val = None  # must set these if fixed_heatmap_scale is True
         self.max_heatmap_val = None
+
+        self.legacy_state = legacy_state
 
     def set_main_car(self, index):
         """
@@ -351,7 +344,8 @@ class CarVisualizer(object):
             self._draw_car(car)
 
         if self.main_car is not None:
-            self.label.text = "Speed: {0:.2f}".format(self.world.cars[0].state.numpy()[2])
+            speed_index = 3 if self.legacy_state else 2
+            self.label.text = "Speed: {0:.2f}".format(self.world.cars[0].state.numpy()[speed_index])
             if self.heatmap_show:
                 if not self.heat:
                     self._set_heat(self.main_car.reward_fn, self.main_car)
@@ -381,19 +375,7 @@ class CarVisualizer(object):
         graphics.draw(
             4,
             gl.GL_QUADS,
-            (
-                "v2f",
-                (
-                    -radius,
-                    -radius,
-                    radius,
-                    -radius,
-                    radius,
-                    radius,
-                    -radius,
-                    radius,
-                ),
-            ),
+            ("v2f", (-radius, -radius, radius, -radius, radius, radius, -radius, radius,),),
             (
                 "t2f",
                 (
@@ -418,7 +400,10 @@ class CarVisualizer(object):
 
         sprite = self.car_sprites[color]
         sprite.x, sprite.y = state[0], state[1]
-        sprite.rotation = -state[3] * 180.0 / math.pi
+        if self.legacy_state:
+            sprite.rotation = -state[2] * 180.0 / math.pi
+        else:
+            sprite.rotation = -state[3] * 180.0 / math.pi
         sprite.opacity = opacity
         sprite.draw()
 
@@ -520,8 +505,9 @@ class CarVisualizer(object):
 def main():
     """Visualizes three cars in a merging scenario."""
     from experiments.merging import ThreeLaneTestCar
-    from driver.world import ThreeLaneCarWorld
+
     from driver.car import FixedVelocityCar
+    from driver.world import ThreeLaneCarWorld
 
     world = ThreeLaneCarWorld()
     our_car = ThreeLaneTestCar(

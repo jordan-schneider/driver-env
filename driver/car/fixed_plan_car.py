@@ -87,6 +87,6 @@ class LegacyPlanCar(FixedPlanCar):
         plan.extend([np.array([1.0, initial_state[3]], dtype=np.float32)] * phase_length)
         plan.extend([np.array([-1.0, initial_state[3]], dtype=np.float32)] * phase_length)
         plan.extend(
-            [np.array([-1.0, initial_state[3] * 1.3], dtype=np.float32)] * (2 * phase_length)
+            [np.array([0.0, initial_state[3] * 1.3], dtype=np.float32)] * (2 * phase_length)
         )
         return plan
